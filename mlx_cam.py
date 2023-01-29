@@ -19,6 +19,11 @@ example.
     version 3.
 """
 
+## @mainpage
+#  The documentation of interest is for class MLX_Cam
+#
+#  @image html "ir_selfie_0.png"
+
 import utime as time
 from machine import Pin, I2C
 import mlx90640
@@ -34,7 +39,7 @@ class MLX_Cam:
 
     def __init__(self, i2c, address=0x33, pattern=ChessPattern,
                  width=NUM_COLS, height=NUM_ROWS):
-        """
+        """!
         @brief   Set up an MLX90640 camera.
         @param   i2c An I2C bus which has been set up to talk to the camera;
                  this must be a bus object which has already been set up
@@ -44,16 +49,23 @@ class MLX_Cam:
         @param   width The width of the image in pixels; leave it at default
         @param   height The height of the image in pixels; leave it at default
         """
+        ## The I2C bus to which the camera is attached
         self._i2c = i2c
+        ## The address of the camera on the I2C bus
         self._addr = address
+        ## The pattern for reading the camera, usually ChessPattern
         self._pattern = pattern
+        ## The width of the image in pixels, which should be 32
         self._width = width
+        ## The height of the image in pixels, which should be 24
         self._height = height
 
-        # Set up the MLX90640 object that does the work
+        # The MLX90640 object that does the work
         self._camera = mlx90640.MLX90640(i2c, address)
         self._camera.set_pattern(pattern)
         self._camera.setup()
+
+        ## A local reference to the image object within the camera driver
         self._image = self._camera.image
 
 
@@ -178,6 +190,7 @@ class MLX_Cam:
 
 # The test code sets up the sensor, then grabs and shows an image in a terminal
 # every ten and a half seconds or so.
+## @cond NO_DOXY don't document the test code in the driver documentation
 if __name__ == "__main__":
 
     # The following import is only used to check if we have an STM32 board such
@@ -232,6 +245,6 @@ if __name__ == "__main__":
 
     print ("Done.")
 
-
+## @endcond End the block which Doxygen should ignore
 
 
