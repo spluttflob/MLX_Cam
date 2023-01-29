@@ -1,4 +1,4 @@
-"""
+"""!
 @file mlx_cam.py
 This file contains a wrapper that facilitates the use of a Melexis MLX90640
 thermal infrared camera for general use. The wrapper contains a class MLX_Cam
@@ -6,33 +6,32 @@ whose use is greatly simplified in comparison to that of the base class,
 @c class @c MLX90640, by mwerezak, who has a cool fox avatar, at
 @c https://github.com/mwerezak/micropython-mlx90640
 
-To use this code, upload the directory @c mlx90640 with all its contents inside
-to the root directory of your MicroPython device, then copy this file to the
-same root directory.
+To use this code, upload the directory @c mlx90640 from mwerezak with all its
+contents to the root directory of your MicroPython device, then copy this file
+to the root directory of the MicroPython device.
 
 There's some test code at the bottom of this file which serves as a beginning
 example.
 
 @author mwerezak Original files, Summer 2022
-@author JR Ridgely Added simplified wrapper class @c MLX_Cam
+@author JR Ridgely Added simplified wrapper class @c MLX_Cam, January 2023
 @copyright (c) 2022 by the authors and released under the GNU Public License,
     version 3.
 """
 
 import utime as time
 from machine import Pin, I2C
-
 import mlx90640
 from mlx90640.calibration import NUM_ROWS, NUM_COLS, IMAGE_SIZE, TEMP_K
 from mlx90640.image import ChessPattern, InterleavedPattern
 
 
 class MLX_Cam:
+    """!
+    @brief   Class which wraps an MLX90640 thermal infrared camera driver to
+             make it easier to grab and use an image.
     """
-    @brief   Class which wraps an MLX90640 thermal infrared camera to make it
-             easier to grab and use an image.
-    """
-    
+
     def __init__(self, i2c, address=0x33, pattern=ChessPattern,
                  width=NUM_COLS, height=NUM_ROWS):
         """
@@ -42,6 +41,8 @@ class MLX_Cam:
         @param   address The address of the camera on the I2C bus (default 0x33)
         @param   pattern The way frames are interleaved, as we read only half
                  the pixels at a time (default ChessPattern)
+        @param   width The width of the image in pixels; leave it at default
+        @param   height The height of the image in pixels; leave it at default
         """
         self._i2c = i2c
         self._addr = address
@@ -57,7 +58,7 @@ class MLX_Cam:
 
 
     def ascii_image(self, array, pixel="██", textcolor="0;180;0"):
-        """
+        """!
         @brief   Show low-resolution camera data as shaded pixels on a text
                  screen.
         @details The data is printed as a set of characters in columns for the
@@ -98,12 +99,12 @@ class MLX_Cam:
             print(f"\033[38;2;{textcolor}m")
 
 
-    # A "standard" set of characters of different densities to make ASCII art
+    ## A "standard" set of characters of different densities to make ASCII art
     asc = " -.:=+*#%@"
 
 
     def ascii_art(self, array):
-        """
+        """!
         @brief   Show a data array from the IR image as ASCII art.
         @details Each character is repeated twice so the image isn't squished
                  laterally. A code of "><" indicates an error, probably caused
@@ -126,9 +127,8 @@ class MLX_Cam:
         return
 
 
-
     def get_csv(self, array, limits=None):
-        """
+        """!
         @brief   Generate a string containing image data in CSV format.
         @details This function generates a set of lines, each having one row of
                  image data in Comma Separated Variable format. The lines can
@@ -157,12 +157,12 @@ class MLX_Cam:
 
 
     def get_image(self):
-        """
+        """!
         @brief   Get one image from a MLX90640 camera.
-        @details Grab one image from the given camera and return it. Both subframes
-                 (the odd checkerboard portions of the image) are grabbed and
-                 combined. This assumes that the camera is in the ChessPattern
-                 (default) mode.
+        @details Grab one image from the given camera and return it. Both
+                 subframes (the odd checkerboard portions of the image) are
+                 grabbed and combined. This assumes that the camera is in the
+                 ChessPattern (default) mode as it probably should be.
         @returns A reference to the image object we've just filled with data
         """
         for subpage in (0, 1):
@@ -176,12 +176,25 @@ class MLX_Cam:
         return image
 
 
+# The test code sets up the sensor, then grabs and shows an image in a terminal
+# every ten and a half seconds or so.
 if __name__ == "__main__":
 
-    print("MXL90640 Easy(ish) Driver Test")
+    # The following import is only used to check if we have an STM32 board such
+    # as a Pyboard or Nucleo; if not, use a different library
+    try:
+        from pyb import info
 
-    # For ESP32 38-pin cheapo board
-    i2c_bus = I2C(1, scl=Pin(22), sda=Pin(21))
+    # Oops, it's not an STM32; assume generic machine.I2C for ESP32 and others
+    except ImportError:
+        # For ESP32 38-pin cheapo board from NodeMCU, KeeYees, etc.
+        i2c_bus = I2C(1, scl=Pin(22), sda=Pin(21))
+
+    # OK, we do have an STM32, so just use the default pin assignments for I2C1
+    else:
+        i2c_bus = I2C(1)
+
+    print("MXL90640 Easy(ish) Driver Test")
 
     # Select MLX90640 camera I2C address, normally 0x33, and check the bus
     i2c_address = 0x33
@@ -201,9 +214,9 @@ if __name__ == "__main__":
 
             # Can show image.v_ir, image.alpha, or image.buf; image.v_ir best?
             # Display pixellated grayscale or numbers in CSV format; the CSV
-            # could also be written to a file. Spreadsheets can read CSV and
-            # make a decent false-color heat plot.
-            show_image = False
+            # could also be written to a file. Spreadsheets, Matlab(tm), or
+            # CPython can read CSV and make a decent false-color heat plot.
+            show_image = True
             show_csv = False
             if show_image:
                 camera.ascii_image(image.buf)
